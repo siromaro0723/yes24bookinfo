@@ -1,15 +1,19 @@
 import os
-import pandas as pd
 import re 
 from bs4 import BeautifulSoup as bs
 import requests
 import urllib.request
 import time
+import tkinter as tk
+import pandas as pd
+
+def close_message_window():
+    message_window.destroy()
 
 # 실행 파일이 아닌 경우에만 입력을 받음
 if __name__ == "__main__":
     # 메시지 출력
-    print('Yes24의 1~3페이지 검색 결과가 출력됩니다. \n키워드를 입력하세요:')
+    print('Yes24의 1~3페이지 검색 결과가 출력됩니다. \n키워드를 입력하세요.', end=" ")
 
     # 검색할 키워드 입력
     query = input('')
@@ -43,7 +47,7 @@ for page in range(1, 4):  # 여기서 1부터 3페이지까지
             continue
 
         # 도서 정보 페이지에 접근하기
-        book_page_url = f"https://www.yes24.com{info.select_one('a.gd_name')['href']}"
+        book_page_url = f"https://www.yes24.com{info.select_one('div.info_row.info_name > a.gd_name')['href']}"
         book_page_response = requests.get(book_page_url)
         book_page_soup = bs(book_page_response.text, 'html.parser')
 
@@ -57,8 +61,12 @@ for page in range(1, 4):  # 여기서 1부터 3페이지까지
         pub = pub_tag.get_text() if pub_tag else "정보 없음"
 
         # 저역자 정보 가져오기
-        auth_tag = book_page_soup.select_one("span.gd_auth")
-        auth = auth_tag.get_text().split('|')[0].strip().replace('정보 더 보기/감추기', '') if auth_tag else "정보 없음"
+        auth_tag = book_page_soup.select_one("span.moreAuthLiCont")
+        if not auth_tag:
+            auth_tag = book_page_soup.select_one("span.gd_auth")
+
+        auth = auth_tag.get_text().split('|')[0].strip() if auth_tag else "정보 없음"
+        auth = auth.replace('\n', '').replace(',', '')
 
         # 출간일 정보 가져오기
         date_tag = book_page_soup.select_one("tbody > tr:nth-child(1) > td.txt.lastCol")
@@ -114,4 +122,15 @@ df = pd.DataFrame(data_list)
 csv_file_path = "yes24bookinfo.csv"
 df.to_csv(csv_file_path, index=False, encoding='utf-8-sig')
 
-print(f"도서 정보 {csv_file_path} 파일과 표지가 저장되었습니다.")
+# 메시지 창 표시 및 5초 후에 닫기
+message_window = tk.Tk()
+message_window.title("알림")
+
+# 메시지 표시
+message_label = tk.Label(message_window, text=f"도서 정보 {csv_file_path} 파일과 표지가 저장되었습니다.")
+message_label.pack(padx=20, pady=20)
+
+# 창을 5초 동안 표시한 후에 자동으로 닫기
+message_window.after(5000, close_message_window)
+
+message_window.mainloop()
