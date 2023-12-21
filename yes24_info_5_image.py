@@ -13,7 +13,7 @@ def close_message_window():
 # 실행 파일이 아닌 경우에만 입력을 받음
 if __name__ == "__main__":
     # 메시지 출력
-    print('Yes24의 1~3페이지 검색 결과가 출력됩니다. \n키워드를 입력하세요.', end=" ")
+    print('Yes24의 1~3페이지 검색 결과가 출력됩니다. \n키워드를 입력하세요:', end=" ")
 
     # 검색할 키워드 입력
     query = input('')
